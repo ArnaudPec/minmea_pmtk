@@ -394,6 +394,35 @@ enum minmea_sentence_id minmea_sentence_id(const char *sentence, bool strict)
     return MINMEA_UNKNOWN;
 }
 
+enum minmea_sentence_pmtk_id minmea_sentence_pmtk_id(const char *sentence, bool strict)
+{
+    if (!minmea_check(sentence, strict))
+        return MINMEA_SENTENCE_PMTK_INVALID;
+
+    char type[9];
+    if (!minmea_scan(sentence, "p", type))
+        return MINMEA_SENTENCE_PMTK_INVALID;
+
+    if (!strncmp(type, "PMTK001", strlen("PMTK001")))
+        return MINMEA_SENTENCE_PMTK001;
+    if (!strncmp(type, "PMTK010", strlen("PMTK010")))
+        return MINMEA_SENTENCE_PMTK010;
+    if (!strncmp(type, "PMTK011", strlen("PMTK011")))
+        return MINMEA_SENTENCE_PMTK011;
+    if (!strncmp(type, "PMTK513", strlen("PMTK513")))
+        return MINMEA_SENTENCE_PMTK513;
+    if (!strncmp(type, "PMTK527", strlen("PMTK527")))
+        return MINMEA_SENTENCE_PMTK527;
+    if (!strncmp(type, "PMTK705", strlen("PMTK705")))
+        return MINMEA_SENTENCE_PMTK705;
+    if (!strncmp(type, "PMTK707", strlen("PMTK707")))
+        return MINMEA_SENTENCE_PMTK707;
+    if (!strncmp(type, "PMTK869", strlen("PMTK869")))
+        return MINMEA_SENTENCE_PMTK869;
+
+    return MINMEA_SENTENCE_PMTK_UNKNOWN;
+}
+
 bool minmea_parse_gbs(struct minmea_sentence_gbs *frame, const char *sentence)
 {
     // $GNGBS,170556.00,3.0,2.9,8.3,,,,*5C
@@ -648,6 +677,129 @@ bool minmea_parse_zda(struct minmea_sentence_zda *frame, const char *sentence)
   if (abs(frame->hour_offset) > 13 ||
       frame->minute_offset > 59 ||
       frame->minute_offset < 0)
+      return false;
+
+  return true;
+}
+
+bool minmea_parse_pmtk001(struct minmea_sentence_pmtk001 *frame, const char *sentence)
+{
+  char type[8];
+
+  if(!minmea_scan(sentence, "pii",
+          type,
+          &frame->cmd_id,
+          &frame->rc))
+      return false;
+  if (strncmp(type, "PMTK001", strlen("PMTK001")))
+      return false;
+
+  return true;
+}
+
+bool minmea_parse_pmtk010(struct minmea_sentence_pmtk010 *frame, const char *sentence)
+{
+  char type[8];
+
+  if(!minmea_scan(sentence, "pi",
+          type,
+          &frame->msg))
+      return false;
+  if (strncmp(type, "PMTK010", strlen("PMTK010")))
+      return false;
+
+  return true;
+}
+
+bool minmea_parse_pmtk011(struct minmea_sentence_pmtk011 *frame, const char *sentence)
+{
+  char type[8];
+
+  if(!minmea_scan(sentence, "ps",
+          type,
+          &frame->text_msg))
+      return false;
+  if (strncmp(type, "PMTK011", strlen("PMTK011")))
+      return false;
+
+  return true;
+}
+
+bool minmea_parse_pmtk513(struct minmea_sentence_pmtk513 *frame, const char *sentence)
+{
+  char type[8];
+
+  if(!minmea_scan(sentence, "pi",
+          type,
+          &frame->sbas_activated))
+      return false;
+  if (strncmp(type, "PMTK513", strlen("PMTK513")))
+      return false;
+
+  return true;
+}
+
+bool minmea_parse_pmtk527(struct minmea_sentence_pmtk527 *frame, const char *sentence)
+{
+  char type[8];
+
+  if(!minmea_scan(sentence, "pf",
+          type,
+          &frame->nav_threshold))
+      return false;
+  if (strncmp(type, "PMTK527", strlen("PMTK527")))
+      return false;
+
+  return true;
+}
+
+bool minmea_parse_pmtk705(struct minmea_sentence_pmtk705 *frame, const char *sentence)
+{
+  char type[8];
+
+  if(!minmea_scan(sentence, "ps",
+          type,
+          &frame->release_str))
+      return false;
+  if (strncmp(type, "PMTK705", strlen("PMTK705")))
+      return false;
+
+  return true;
+}
+
+bool minmea_parse_pmtk707(struct minmea_sentence_pmtk707 *frame, const char *sentence)
+{
+  char type[8];
+
+  if(!minmea_scan(sentence, "piiiiiiiii",
+          type,
+          &frame->set,
+          &frame->fwn,
+          &frame->ftow,
+          &frame->lwn,
+          &frame->ltow,
+          &frame->fcwn,
+          &frame->fctow,
+          &frame->lcwn,
+          &frame->lctow))
+      return false;
+  if (strncmp(type, "PMTK707", strlen("PMTK707")))
+      return false;
+
+  return true;
+}
+
+bool minmea_parse_pmtk869(struct minmea_sentence_pmtk869 *frame, const char *sentence)
+{
+  char type[8];
+
+  if(!minmea_scan(sentence, "piii",
+          type,
+          &frame->cmd_type,
+          &frame->easy_enabled,
+          &frame->extension_day))
+      return false;
+  if (strncmp(type, "PMTK869", strlen("PMTK869")))
       return false;
 
   return true;

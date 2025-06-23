@@ -26,6 +26,14 @@ extern "C" {
 #define MINMEA_MAX_SENTENCE_LENGTH 80
 #endif
 
+#ifndef MINMEA_PMTK_TEXT_MSG_LENGTH
+#define MINMEA_PMTK_TEXT_MSG_LENGTH 40
+#endif
+
+#ifndef MINMEA_PMTK_RELEASE_STR_LENGTH
+#define MINMEA_PMTK_RELEASE_STR_LENGTH 40
+#endif
+
 enum minmea_sentence_id {
     MINMEA_INVALID = -1,
     MINMEA_UNKNOWN = 0,
@@ -38,6 +46,19 @@ enum minmea_sentence_id {
     MINMEA_SENTENCE_RMC,
     MINMEA_SENTENCE_VTG,
     MINMEA_SENTENCE_ZDA,
+};
+
+enum minmea_sentence_pmtk_id {
+    MINMEA_SENTENCE_PMTK_INVALID = -1,
+    MINMEA_SENTENCE_PMTK_UNKNOWN = 0,
+    MINMEA_SENTENCE_PMTK001,
+    MINMEA_SENTENCE_PMTK010,
+    MINMEA_SENTENCE_PMTK011,
+    MINMEA_SENTENCE_PMTK527,
+    MINMEA_SENTENCE_PMTK513,
+    MINMEA_SENTENCE_PMTK705,
+    MINMEA_SENTENCE_PMTK707,
+    MINMEA_SENTENCE_PMTK869,
 };
 
 struct minmea_float {
@@ -176,6 +197,70 @@ struct minmea_sentence_zda {
     int minute_offset;
 };
 
+enum minmea_pmtk_retcode {
+    MINEA_PMTK_RET_INVALID_CMD = 0,
+    MINEA_PMTK_RET_UNSUPPORTED_CMD = 1,
+    MINEA_PMTK_RET_FAILED = 2,
+    MINEA_PMTK_RET_SUCCEEDED= 3,
+};
+
+enum minmea_pmtk_sys_msg {
+    MINEA_PMTK_SYS_MSG_UNKNOWN = 0,
+    MINEA_PMTK_SYS_MSG_STARTUP = 1,
+    MINEA_PMTK_SYS_MSG_HOST_AIDING_EPO = 2,
+    MINEA_PMTK_SYS_MSG_NORMAL_MODE= 3,
+};
+
+enum minmea_easy_cmd_type {
+    MINMEA_EASY_CMD_TYPE_QUERY = 0,
+    MINMEA_EASY_CMD_TYPE_SET = 1,
+    MINMEA_EASY_CMD_TYPE_RESULT = 2,
+};
+
+struct minmea_sentence_pmtk001 {
+    int cmd_id;
+    enum minmea_pmtk_retcode rc;
+};
+
+struct minmea_sentence_pmtk010 {
+    enum minmea_pmtk_sys_msg msg;
+};
+
+struct minmea_sentence_pmtk011 {
+    char text_msg[MINMEA_PMTK_TEXT_MSG_LENGTH];
+};
+
+struct minmea_sentence_pmtk705 {
+    // Format inconsistency between vendors, keeping raw string
+    char release_str[MINMEA_PMTK_RELEASE_STR_LENGTH];
+};
+
+struct minmea_sentence_pmtk513 {
+    bool sbas_activated;
+};
+
+struct minmea_sentence_pmtk527 {
+    float nav_threshold;
+};
+
+struct minmea_sentence_pmtk869 {
+    enum minmea_easy_cmd_type cmd_type;
+    bool easy_enabled;
+    int extension_day;
+};
+
+struct minmea_sentence_pmtk707 {
+    bool set;
+    int fwn;
+    int ftow;
+    int lwn;
+    int ltow;
+    int fcwn;
+    int fctow;
+    int lcwn;
+    int lctow;
+};
+
 /**
  * Calculate raw sentence checksum. Does not check sentence integrity.
  */
@@ -195,6 +280,11 @@ bool minmea_talker_id(char talker[3], const char *sentence);
  * Determine sentence identifier.
  */
 enum minmea_sentence_id minmea_sentence_id(const char *sentence, bool strict);
+
+/**
+ * Determine pmtk sentence identifier.
+ */
+enum minmea_sentence_pmtk_id minmea_sentence_pmtk_id(const char *sentence, bool strict);
 
 /**
  * Scanf-like processor for NMEA sentences. Supports the following formats:
@@ -224,6 +314,14 @@ bool minmea_parse_gst(struct minmea_sentence_gst *frame, const char *sentence);
 bool minmea_parse_gsv(struct minmea_sentence_gsv *frame, const char *sentence);
 bool minmea_parse_vtg(struct minmea_sentence_vtg *frame, const char *sentence);
 bool minmea_parse_zda(struct minmea_sentence_zda *frame, const char *sentence);
+bool minmea_parse_pmtk001(struct minmea_sentence_pmtk001 *frame, const char *sentence);
+bool minmea_parse_pmtk010(struct minmea_sentence_pmtk010 *frame, const char *sentence);
+bool minmea_parse_pmtk011(struct minmea_sentence_pmtk011 *frame, const char *sentence);
+bool minmea_parse_pmtk513(struct minmea_sentence_pmtk513 *frame, const char *sentence);
+bool minmea_parse_pmtk527(struct minmea_sentence_pmtk527 *frame, const char *sentence);
+bool minmea_parse_pmtk705(struct minmea_sentence_pmtk705 *frame, const char *sentence);
+bool minmea_parse_pmtk707(struct minmea_sentence_pmtk707 *frame, const char *sentence);
+bool minmea_parse_pmtk869(struct minmea_sentence_pmtk869 *frame, const char *sentence);
 
 /**
  * Convert GPS UTC date/time representation to a UNIX calendar time.
