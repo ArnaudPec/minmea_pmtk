@@ -254,6 +254,21 @@ bool minmea_scan(const char *sentence, const char *format, ...)
                 buf[5] = '\0';
             } break;
 
+            case 'p': { // PMTK identifier (char *).
+                if (!field)
+                    goto parse_error;
+
+                if (field[0] != '$')
+                    goto parse_error;
+                for (int f=0; f<7; f++)
+                    if (!minmea_isfield(field[1+f]))
+                        goto parse_error;
+
+                char *buf = va_arg(ap, char *);
+                memcpy(buf, field+1, 7);
+                buf[7] = '\0';
+            } break;
+
             case 'D': { // Date (int, int, int), -1 if empty.
                 struct minmea_date *date = va_arg(ap, struct minmea_date *);
 
